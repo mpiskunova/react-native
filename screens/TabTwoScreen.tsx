@@ -7,7 +7,11 @@ import * as SecureStore from 'expo-secure-store';
 export default function TabTwoScreen() {
   const [markers, setMarkers] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [currentMarker, setCurrentMarker] = useState(null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [error, getError] = useState(null);
 
   async function getMarkers() {
     const markersFromStore = await SecureStore.getItemAsync('markers') || [];
@@ -25,10 +29,40 @@ export default function TabTwoScreen() {
     setCurrentMarker(marker);
   }
 
+  const openEditModal = (id: number) => {
+    setEditModalVisible(!editModalVisible);
+    const marker = markers.find((element) => element.id === id);
+
+    setCurrentMarker(marker);
+  }
+
   async function onDeletePress(id) {
     const updatedMarkers = markers.filter((element) => element.id !== id);
     setMarkers(updatedMarkers);
     await SecureStore.setItemAsync('markers', JSON.stringify(updatedMarkers));
+  }
+
+  async function editMarker() {
+    if (description.trim() === '' || title.trim() === '') {
+      getError('Empty values not allowed')
+    } else {
+      const newMarker = {
+        ...currentMarker,
+        title,
+        description,
+      }
+      const updatedMarkers = markers.map((element) => {
+        if (element.id === currentMarker.id) {
+          return newMarker
+        } else {
+          return element
+        }
+      });
+
+      setMarkers(updatedMarkers);
+      await SecureStore.setItemAsync('markers', JSON.stringify(updatedMarkers));
+      setEditModalVisible(!editModalVisible);
+    }
   }
 
   const modal = (
@@ -59,12 +93,6 @@ export default function TabTwoScreen() {
                 pinColor="red"
               />
           </MapView >
-          {/* <Pressable
-            style={styles.buttonOk}
-            onPress={handleClick}
-          >
-            <Text style={styles.textStyle}>OK</Text>
-          </Pressable> */}
           <Pressable
             style={styles.buttonCancel}
             onPress={() => setModalVisible(false)}
@@ -76,25 +104,71 @@ export default function TabTwoScreen() {
     </Modal>
   )
 
+  const editModal = (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={editModalVisible}
+    >
+      <View style={styles.centeredView}>
+        <View style={styles.modalView}>
+          <Text style={styles.modalText}>Edit marker</Text>
+          <TextInput
+            style={styles.input}
+            onChangeText={setTitle}
+            value={title}
+            placeholder="Edit title"
+            defaultValue={currentMarker?.title}
+          />
+          <TextInput
+            style={styles.input}
+            onChangeText={setDescription}
+            value={description}
+            placeholder="Edit description"
+            defaultValue={currentMarker?.description}
+          />
+          {error != null &&
+            <Text>{error}</Text>
+          }
+          <Pressable
+            style={styles.buttonOk}
+            onPress={editMarker}
+          >
+            <Text style={styles.textStyle}>OK</Text>
+          </Pressable>
+          <Pressable
+            style={styles.buttonCancel}
+            onPress={() => setEditModalVisible(false)}
+          >
+            <Text style={styles.textStyle}>Cancel</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  )
+
   return (
     <View style={styles.container}>
       {modalVisible && modal}
-      { markers.length > 0 && markers.map((element) => (
-        <View style={styles.card} key={element.id}>
-          <TouchableOpacity onPress={() => openModal(element.id)}>
-            <View>
-              <Text style={styles.title}>
-                {element.title}
-              </Text>
-              <Text>
-                {element.description}
-              </Text>
-            </View>
-          </TouchableOpacity>
-          <Button title="Delete" onPress={() => onDeletePress(element.id)} />
-          <Button title="Edit" />
-        </View>
-      )) }
+      {editModalVisible && editModal}
+      { markers.length > 0
+        ? markers.map((element) => (
+          <View style={styles.card} key={element.id}>
+            <TouchableOpacity onPress={() => openModal(element.id)}>
+              <View>
+                <Text style={styles.title}>
+                  {element.title}
+                </Text>
+                <Text>
+                  {element.description}
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <Button title="Delete" onPress={() => onDeletePress(element.id)} />
+            <Button title="Edit" onPress={() => openEditModal(element.id)} />
+          </View>
+        )) 
+        : <Text>There is no marker</Text>}
     </View>
   );
 }
@@ -145,6 +219,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5
   },
+  input: {
+    height: 40,
+    width: 160,
+    borderRadius: 20,
+    margin: 10,
+    borderWidth: 1,
+    padding: 10,
+  },
   buttonCancel: {
     borderRadius: 20,
     width: 300,
@@ -153,6 +235,14 @@ const styles = StyleSheet.create({
     elevation: 2,
     backgroundColor: "#2196F3",
     opacity: 0.5,
+  },
+  buttonOk: {
+    borderRadius: 20,
+    width: 300,
+    padding: 10,
+    marginTop: 20,
+    elevation: 2,
+    backgroundColor: "#2196F3",
   },
   textStyle: {
     color: "white",
