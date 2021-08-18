@@ -13,20 +13,19 @@ export default function TabTwoScreen() {
 
   useEffect(() => {
     getMarkers();
-  }, []);
+  }, [markers]);
 
   return (
     <View style={styles.container}>
       { markers.length > 0 && markers.map((element) => (
-        <>
-          <Text style={styles.title} key={element.id}>
+        <View key={element.id} style={styles.card} onPress={() => console.log(123)}>
+          <Text style={styles.title}>
             {element.title}
           </Text>
-          <Text key={element.id}>
+          <Text>
             {element.description}
           </Text>
-          <View style={styles.underline}/>
-        </>
+        </View>
       )) }
     </View>
   );
@@ -35,24 +34,21 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 20,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  card: {
+    borderRadius: 6,
+    borderWidth: 1,
+    width: '90%',
+    marginBottom: 15,
+    minHeight: 70,
+    padding: 15,
   },
   title: {
-    marginTop: 10,
     fontSize: 16,
     fontWeight: 'bold',
   },
-  underline: {
-    borderBottomColor: 'black',
-    borderBottomWidth: 1,
-    width: 1000,
-    marginTop: 10,
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
+
 });

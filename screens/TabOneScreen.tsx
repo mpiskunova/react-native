@@ -14,6 +14,7 @@ export default function TabOneScreen() {
   const [description, setDescription] = useState('');
   const [pinCoordinate, setPinCoordinate] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [error, getError] = useState(null);
 
   async function getMarkers() {
     const markersFromStore = await SecureStore.getItemAsync('markers') || [];
@@ -41,10 +42,13 @@ export default function TabOneScreen() {
   };
 
   const handleClick = () => {
-    const updatedMarkers = [...markers, {
+    if (description.trim() === '' || title.trim() === '') {
+      getError('Empty values not allowed')
+    } else {
+      const updatedMarkers = [...markers, {
       coordinate: pinCoordinate,
-      title: title,
-      description: description,
+      title: title.trim(),
+      description: description.trim(),
       id: Date.now(),
     }];
     
@@ -52,6 +56,7 @@ export default function TabOneScreen() {
     setModalVisible(!modalVisible);
 
     return saveMarkers(updatedMarkers);
+    }
   }
 
   const modal = (
@@ -75,11 +80,20 @@ export default function TabOneScreen() {
             value={description}
             placeholder="Add description"
           />
+          {error != null &&
+            <Text>{error}</Text>
+          }
           <Pressable
-            style={styles.buttonClose}
+            style={styles.buttonOk}
             onPress={handleClick}
           >
             <Text style={styles.textStyle}>OK</Text>
+          </Pressable>
+          <Pressable
+            style={styles.buttonCancel}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={styles.textStyle}>Cancel</Text>
           </Pressable>
         </View>
       </View>
@@ -148,13 +162,22 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5
   },
-  buttonClose: {
+  buttonOk: {
     borderRadius: 20,
     width: 160,
     padding: 10,
     marginTop: 10,
     elevation: 2,
     backgroundColor: "#2196F3",
+  },
+  buttonCancel: {
+    borderRadius: 20,
+    width: 160,
+    padding: 10,
+    marginTop: 10,
+    elevation: 2,
+    backgroundColor: "#2196F3",
+    opacity: 0.5,
   },
   textStyle: {
     color: "white",
