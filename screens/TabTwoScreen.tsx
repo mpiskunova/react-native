@@ -34,6 +34,8 @@ export default function TabTwoScreen() {
     const marker = markers.find((element) => element.id === id);
 
     setCurrentMarker(marker);
+    setTitle(marker.title);
+    setDescription(marker.description)
   }
 
   async function onDeletePress(id) {
@@ -118,14 +120,12 @@ export default function TabTwoScreen() {
             onChangeText={setTitle}
             value={title}
             placeholder="Edit title"
-            defaultValue={currentMarker?.title}
           />
           <TextInput
             style={styles.input}
             onChangeText={setDescription}
             value={description}
             placeholder="Edit description"
-            defaultValue={currentMarker?.description}
           />
           {error != null &&
             <Text>{error}</Text>
