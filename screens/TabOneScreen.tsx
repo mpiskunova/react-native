@@ -32,7 +32,7 @@ export default function TabOneScreen() {
       await Location.getCurrentPositionAsync({});
     })();
     getMarkers();
-  }, []);
+  }, [markers]);
   
   const handleMapPress = async (coordinate: any) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -46,16 +46,17 @@ export default function TabOneScreen() {
       getError('Empty values not allowed')
     } else {
       const updatedMarkers = [...markers, {
-      coordinate: pinCoordinate,
-      title: title.trim(),
-      description: description.trim(),
-      id: Date.now(),
-    }];
-    
-    setMarkers(updatedMarkers);
-    setModalVisible(!modalVisible);
+        coordinate: pinCoordinate,
+        title: title.trim(),
+        description: description.trim(),
+        id: Date.now(),
+      }];
+      
+      setMarkers(updatedMarkers);
+      setModalVisible(!modalVisible);
+      getError(null);
 
-    return saveMarkers(updatedMarkers);
+      return saveMarkers(updatedMarkers);
     }
   }
 
