@@ -7,7 +7,7 @@ import * as Haptics from 'expo-haptics';
 import * as SecureStore from 'expo-secure-store';
 
 export default function TabOneScreen() {
-  Location.requestForegroundPermissionsAsync();
+  
 
   const [markers, setMarkers] = useState([]);
   const [title, setTitle] = useState('');
@@ -20,17 +20,13 @@ export default function TabOneScreen() {
     const markersFromStore = await SecureStore.getItemAsync('markers') || [];
     setMarkers(JSON.parse(markersFromStore));
   }
-  
-  async function saveMarkers(updated: any) {
-    await SecureStore.setItemAsync('markers', JSON.stringify(updated));
-    setTitle('');
-    setDescription('');
-  }
-  
+
   useEffect(() => {
+    Location.requestForegroundPermissionsAsync();
     (async () => {
       await Location.getCurrentPositionAsync({});
     })();
+    // SecureStore.deleteItemAsync("markers");
     getMarkers();
   }, [markers]);
   
@@ -41,9 +37,36 @@ export default function TabOneScreen() {
     setModalVisible(!modalVisible);
   };
 
+  function saveCurrentLocation() {
+    (async () => {
+      await Location.requestForegroundPermissionsAsync();
+      const location = await Location.getCurrentPositionAsync({});
+      setPinCoordinate(location);
+    })();
+    
+    setModalVisible(!modalVisible);
+  }
+
+  async function saveMarkers(updated: any) {
+    await SecureStore.setItemAsync('markers', JSON.stringify(updated));
+    setTitle('');
+    setDescription('');
+    getError(null);
+    setPinCoordinate(null);
+  }
+  
   const handleClick = () => {
-    if (description.trim() === '' || title.trim() === '') {
-      getError('Empty values not allowed')
+    if (pinCoordinate === null) {
+      getError('Failed to get current location, please try again later.');
+      setTimeout(() => {
+        setModalVisible(!modalVisible)
+        setTitle('');
+        setDescription('');
+        getError(null);
+        setPinCoordinate(null);
+      }, 3000)
+    } else if (description.trim() === '' || title.trim() === '') {
+      getError('Empty values not allowed');
     } else {
       const updatedMarkers = [...markers, {
         coordinate: pinCoordinate,
@@ -54,7 +77,6 @@ export default function TabOneScreen() {
       
       setMarkers(updatedMarkers);
       setModalVisible(!modalVisible);
-      getError(null);
 
       return saveMarkers(updatedMarkers);
     }
@@ -82,7 +104,7 @@ export default function TabOneScreen() {
             placeholder="Add description"
           />
           {error != null &&
-            <Text>{error}</Text>
+            <Text style={styles.errorMessage}>{error}</Text>
           }
           <Pressable
             style={styles.buttonOk}
@@ -119,14 +141,22 @@ export default function TabOneScreen() {
           { markers.length > 0 && markers.map((element) => (
             <Marker
               coordinate={{
-                latitude: element.coordinate.latitude,
-                longitude: element.coordinate.longitude,
+                latitude: element?.coordinate?.latitude,
+                longitude: element?.coordinate?.longitude,
               }}
               pinColor="red"
               key={element.id}
             />
           )) }
       </MapView >
+      <Pressable
+        style={styles.saveCurrentLocation}
+        onPress={saveCurrentLocation}
+      >
+        <Text style={styles.textStyle}>
+          Save current location
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -180,8 +210,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#2196F3",
     opacity: 0.5,
   },
+  saveCurrentLocation: {
+    position: "absolute",
+    top: "auto",
+    bottom: 30,
+    borderRadius: 20,
+    width: 300,
+    padding: 10,
+    backgroundColor: "#2196F3",
+    zIndex: 1,
+  },
   textStyle: {
     color: "white",
+    fontWeight: "bold",
+    textAlign: "center"
+  },
+  errorMessage: {
+    color: "red",
     fontWeight: "bold",
     textAlign: "center"
   },
