@@ -7,7 +7,7 @@ import * as Haptics from 'expo-haptics';
 import * as SecureStore from 'expo-secure-store';
 
 export default function TabOneScreen() {
-  
+  Location.requestForegroundPermissionsAsync();
 
   const [markers, setMarkers] = useState([]);
   const [title, setTitle] = useState('');
@@ -22,11 +22,9 @@ export default function TabOneScreen() {
   }
 
   useEffect(() => {
-    Location.requestForegroundPermissionsAsync();
     (async () => {
       await Location.getCurrentPositionAsync({});
     })();
-    // SecureStore.deleteItemAsync("markers");
     getMarkers();
   }, [markers]);
   
@@ -41,7 +39,11 @@ export default function TabOneScreen() {
     (async () => {
       await Location.requestForegroundPermissionsAsync();
       const location = await Location.getCurrentPositionAsync({});
-      setPinCoordinate(location);
+      const currentCoordinate = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+      setPinCoordinate(currentCoordinate);
     })();
     
     setModalVisible(!modalVisible);
@@ -135,7 +137,7 @@ export default function TabOneScreen() {
         }}
         showsMyLocationButton={false}
         showsUserLocation
-        onPress={(event) => handleMapPress(event.nativeEvent.coordinate)}
+        onPress={(event) => handleMapPress(event?.nativeEvent?.coordinate)}
         // provider="google"
         >
           { markers.length > 0 && markers.map((element) => (

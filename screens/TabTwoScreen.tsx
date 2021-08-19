@@ -19,6 +19,10 @@ export default function TabTwoScreen() {
     const markersFromStore = await SecureStore.getItemAsync('markers') || [];
     setMarkers(JSON.parse(markersFromStore));
   }
+  
+  useEffect(() => {
+    getMarkers();
+  }, []);
 
   useEffect(() => {
     getMarkers();
@@ -231,8 +235,10 @@ const styles = StyleSheet.create({
   },
   dots: {
     position: "absolute",
+    // zIndex: 1000000000,
     left: "auto",
     right: 15,
+    // top: -15,
   },
   card: {
     borderRadius: 6,
